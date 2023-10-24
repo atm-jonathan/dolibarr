@@ -208,7 +208,8 @@ switch ($action)
 		$invoice->socid=$conf_fksoc;
 		$invoice->date_creation=$now;
 		$invoice->date=$now;
-		$invoice->date_lim_reglement=0;
+//              $invoice->date_lim_reglement=0;         ### BATEAU-CONCEPT : pour corriger pb date de règlement au 01/01/1970
+                $invoice->date_lim_reglement=$now;         ### BATEAU-CONCEPT : pour corriger pb date de règlement au 01/01/1970
 		$invoice->total_ht=$obj_facturation->prixTotalHt();
 		$invoice->total_tva=$obj_facturation->montantTva();
 		$invoice->total_ttc=$obj_facturation->prixTotalTtc();
