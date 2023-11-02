@@ -51,6 +51,7 @@ EmployeeRank=Niveau de l'employée pour cette compétence
 EmployeePosition=Poste d'employé
 EmployeePositions=Postes d'employés
 EmployeesInThisPosition=Employés occupant ce poste
+Positions = Postes
 group1ToCompare=Groupe d'utilisateurs à analyser
 group2ToCompare=Deuxième groupe d'utilisateurs pour comparaison
 OrJobToCompare=Comparer aux exigences en matière de compétences professionnelles

@@ -54,7 +54,7 @@ $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');
 
 $id		 = GETPOST('id', 'int');
 $ref 	 = GETPOST('ref', 'alpha');
-$fk_job  = GETPOST('fk_job', 'int');
+$fk_job  = GETPOST('id', 'int');
 $fk_user = GETPOST('fk_user', 'int');
 //$start_date = date('Y-m-d', GETPOST('date_startyear', 'int').'-'.GETPOST('date_startmonth', 'int').'-'.GETPOST('date_startday', 'int'));
 $start_date = dol_mktime(0, 0, 0, GETPOST('date_startmonth', 'int'), GETPOST('date_startday', 'int'), GETPOST('date_startyear', 'int'));
@@ -117,21 +117,20 @@ foreach ($objectposition->fields as $key => $val) {
 		$fieldstosearchall['t.' . $key] = $val['label'];
 	}
 }
-
 // Definition of array of fields for columns
 $arrayfields = array();
 foreach ($objectposition->fields as $key => $val) {
-	// If $val['visible']==0, then we never show the field
-	if (!empty($val['visible'])) {
-		$visible = (int) dol_eval($val['visible'], 1, 1, '1');
-		$arrayfields['t.' . $key] = array(
+    // If $val['visible']==0, then we never show the field
+    if (!empty($val['visible'])) {
+        $visible = (int) dol_eval($val['visible'], 1, 1, '1');
+        $arrayfields['t.' . $key] = array(
 			'label' => $val['label'],
 			'checked' => (($visible < 0) ? 0 : 1),
 			'enabled' => ($visible != 3 && dol_eval($val['enabled'], 1, 1, '1')),
 			'position' => $val['position'],
 			'help' => isset($val['help']) ? $val['help'] : ''
 		);
-	}
+    }
 }
 // Extra fields
 include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_list_array_fields.tpl.php';
@@ -157,10 +156,10 @@ $upload_dir = $conf->hrm->multidir_output[isset($object->entity) ? $object->enti
 //$isdraft = (($object->status == $object::STATUS_DRAFT) ? 1 : 0);
 //restrictedArea($user, $object->element, $object->id, $object->table_element, '', 'fk_soc', 'rowid', $isdraft);
 if (!isModEnabled('hrm')) {
-	accessforbidden();
+    accessforbidden();
 }
 if (!$permissiontoread || ($action === 'create' && !$permissiontoadd)) {
-	accessforbidden();
+    accessforbidden();
 }
 
 
@@ -171,63 +170,64 @@ if (!$permissiontoread || ($action === 'create' && !$permissiontoadd)) {
 $parameters = array();
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0) {
-	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+    setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
 if (empty($reshook)) {
-	$error = 0;
+    $error = 0;
 
-	$backurlforlist = dol_buildpath('/hrm/position_list.php', 1);
-	//$backtopage = dol_buildpath('/hrm/position.php', 1) . '?fk_job=' . ($fk_job > 0 ? $fk_job : '__ID__');
+//    $backurlforlist = dol_buildpath('/hrm/position_list.php', 1);
+      $idBack = GETPOST('fk_job', 'aZ09');
+      $backtopage = dol_buildpath('/hrm/position.php', 1) . '?id=' . ($idBack  > 0 ? $idBack  : $id);
 
-	if (empty($backtopage) || ($cancel && empty($id))) {
-		if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
-			if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
-				$backtopage = $backurlforlist;
-			} else {
-				if ($fk_job > 0) {
-					$backtopage = dol_buildpath('/hrm/position.php', 1) . '?fk_job=' . ($fk_job > 0 ? $fk_job : '__ID__');
-				} else {
-					$backtopage = dol_buildpath('/hrm/position_card.php', 1) . '?id=__ID__';
-				}
-			}
-		}
-	}
+    if (empty($backtopage) || ($cancel && empty($id))) {
+        if (empty($backtopage) || ($cancel && strpos($backtopage, '__ID__'))) {
+            if (empty($id) && (($action != 'add' && $action != 'create') || $cancel)) {
+                $backtopage = $backurlforlist;
+            } else {
+                if ($fk_job > 0) {
+                    $backtopage = dol_buildpath('/hrm/position.php', 1) . '?fk_job=' . ($fk_job > 0 ? $fk_job : '__ID__');
+                } else {
+                    $backtopage = dol_buildpath('/hrm/position_card.php', 1) . '?id=__ID__';
+                }
+            }
+        }
+    }
 
-	$triggermodname = 'HRM_POSITION_MODIFY'; // Name of trigger action code to execute when we modify record
+    $triggermodname = 'HRM_POSITION_MODIFY'; // Name of trigger action code to execute when we modify record
 
-	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
-	$job = $object;
-	$object = new Position($db);
+    // Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
+    $job = $object;
+    $object = new Position($db);
 
-	// Selection of new fields
-	include DOL_DOCUMENT_ROOT . '/core/actions_changeselectedfields.inc.php';
+    // Selection of new fields
+    include DOL_DOCUMENT_ROOT . '/core/actions_changeselectedfields.inc.php';
 
-	// Purge search criteria
-	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) { // All tests are required to be compatible with all browsers
-		foreach ($object->fields as $key => $val) {
-			$search[$key] = '';
-			if (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
-				$search[$key . '_dtstart'] = '';
-				$search[$key . '_dtend'] = '';
-			}
-		}
-		$toselect = array();
-		$search_array_options = array();
-	}
-	if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')
+    // Purge search criteria
+    if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) { // All tests are required to be compatible with all browsers
+        foreach ($object->fields as $key => $val) {
+            $search[$key] = '';
+            if (preg_match('/^(date|timestamp|datetime)/', $val['type'])) {
+                $search[$key . '_dtstart'] = '';
+                $search[$key . '_dtend'] = '';
+            }
+        }
+        $toselect = array();
+        $search_array_options = array();
+    }
+    if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')
 		|| GETPOST('button_search_x', 'alpha') || GETPOST('button_search.x', 'alpha') || GETPOST('button_search', 'alpha')) {
-			$massaction = ''; // Protection to avoid mass action if we force a new search during a mass action confirmation
-	}
+        $massaction = ''; // Protection to avoid mass action if we force a new search during a mass action confirmation
+    }
 
-	// Mass actions
-	$objectclass = 'Position';
-	$objectlabel = 'Position';
-	$uploaddir = $conf->hrm->dir_output;
-	include DOL_DOCUMENT_ROOT . '/core/actions_massactions.inc.php';
+    // Mass actions
+    $objectclass = 'Position';
+    $objectlabel = 'Position';
+    $uploaddir = $conf->hrm->dir_output;
+    include DOL_DOCUMENT_ROOT . '/core/actions_massactions.inc.php';
 
-	include DOL_DOCUMENT_ROOT . '/core/actions_addupdatedelete.inc.php';
+    include DOL_DOCUMENT_ROOT . '/core/actions_addupdatedelete.inc.php';
 
-	$object = $job;
+    $object = $job;
 }
 
 /*
@@ -242,45 +242,45 @@ $now = dol_now();
 
 // Part to create
 if ($action == 'create') {
-	$object = new Position($db);
-	// Fetch optionals attributes and labels
-	$extrafields->fetch_name_optionals_label($object->table_element);
-	print load_fiche_titre($langs->trans("NewObject", $langs->transnoentitiesnoconv("Position")), '', 'object_' . $object->picto);
+    $object = new Position($db);
+    // Fetch optionals attributes and labels
+    $extrafields->fetch_name_optionals_label($object->table_element);
+    print load_fiche_titre($langs->trans("NewObject", $langs->transnoentitiesnoconv("Position")), '', 'object_' . $object->picto);
 
-	print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
-	print '<input type="hidden" name="token" value="' . newToken() . '">';
-	print '<input type="hidden" name="action" value="add">';
-	if ($backtopage) {
-		print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
-	}
+    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<input type="hidden" name="token" value="' . newToken() . '">';
+    print '<input type="hidden" name="action" value="add">';
+    if ($backtopage) {
+        print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
+    }
 
-	if ($backtopageforcancel) {
-		print '<input type="hidden" name="backtopageforcancel" value="' . $backtopageforcancel . '">';
-	}
+    if ($backtopageforcancel) {
+        print '<input type="hidden" name="backtopageforcancel" value="' . $backtopageforcancel . '">';
+    }
 
-	print dol_get_fiche_head(array(), '');
+    print dol_get_fiche_head(array(), '');
 
-	print '<table class="border centpercent tableforfieldcreate">' . "\n";
+    print '<table class="border centpercent tableforfieldcreate">' . "\n";
 
-	// Common attributes
-	include DOL_DOCUMENT_ROOT . '/core/tpl/commonfields_add.tpl.php';
+    // Common attributes
+    include DOL_DOCUMENT_ROOT . '/core/tpl/commonfields_add.tpl.php';
 
-	// Other attributes
-	include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_add.tpl.php';
+    // Other attributes
+    include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_add.tpl.php';
 
-	print '</table>' . "\n";
+    print '</table>' . "\n";
 
-	print dol_get_fiche_end();
+    print dol_get_fiche_end();
 
-	print $form->buttonsSaveCancel("Create");
+    print $form->buttonsSaveCancel("Create");
 
-	print '</form>';
+    print '</form>';
 
-	//dol_set_focus('input[name="ref"]');
+    //dol_set_focus('input[name="ref"]');
 }
 
 if ($job->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
-	if ($backtopage) {
+    if ($backtopage) {
 		print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 	}
 	if ($backtopageforcancel) {
