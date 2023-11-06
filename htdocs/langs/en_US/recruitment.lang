@@ -48,6 +48,7 @@ IfJobIsLocatedAtAPartner=If job is located at a partner place
 PositionToBeFilled=Job position
 PositionsToBeFilled=Job positions
 ListOfPositionsToBeFilled=List of job positions
+Recruitment = Recruitment
 NewPositionToBeFilled=New job positions
 
 JobOfferToBeFilled=Job position to be filled
