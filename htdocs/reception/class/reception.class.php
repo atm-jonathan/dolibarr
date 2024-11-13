@@ -68,82 +68,137 @@ class Reception extends CommonObject
 	public $fk_element = "fk_reception";
 	public $table_element = "reception";
 	public $table_element_line = "receptiondet_batch";
-	public $ismultientitymanaged = 1; // 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
 	/**
 	 * @var string String with name of icon for myobject. Must be the part after the 'object_' into object_myobject.png
 	 */
 	public $picto = 'dollyrevert';
 
+	/**
+	 * @var int
+	 */
 	public $socid;
+	/**
+	 * @var string
+	 */
 	public $ref_supplier;
 
+	/**
+	 * @var int
+	 */
 	public $entrepot_id;
+	/**
+	 * @var string
+	 */
 	public $tracking_number;
+	/**
+	 * @var string
+	 */
 	public $tracking_url;
+	/**
+	 * @var int<0,1>
+	 */
 	public $billed;
+	/**
+	 * @var string
+	 */
 	public $model_pdf;
 
+	/**
+	 * @var int|float
+	 */
 	public $weight;
+	/**
+	 * @var int|float
+	 */
 	public $trueWeight;
+	/**
+	 * @var null|float|int
+	 */
 	public $weight_units;
+	/**
+	 * @var int|float
+	 */
 	public $trueWidth;
+	/**
+	 * @var int
+	 */
 	public $width_units;
+	/**
+	 * @var int|float
+	 */
 	public $trueHeight;
+	/**
+	 * @var int
+	 */
 	public $height_units;
+	/**
+	 * @var int|float
+	 */
 	public $trueDepth;
+	/**
+	 * @var int
+	 */
 	public $depth_units;
-	// A denormalized value
+	/**
+	 * @var string A denormalized value
+	 */
 	public $trueSize;
+	/**
+	 * @var int|string
+	 */
 	public $size_units;
+	/**
+	 * @var int
+	 */
 	public $user_author_id;
 
-	public $date_delivery; // Date delivery planned
+	/**
+	 * @var int|string Planned date of delivery
+	 */
+	public $date_delivery;
 
 	/**
-	 * @var integer|string Effective delivery date
-	 * @deprecated
+	 * @var int|string Effective delivery date
+	 * @deprecated Use $date_reception
 	 * @see $date_reception
 	 */
 	public $date;
 
 	/**
-	 * @var integer|string Effective delivery date
+	 * @var int|string Effective delivery date
 	 */
 	public $date_reception;
 
 	/**
-	 * @var integer|string date_creation
-	 */
-	public $date_creation;
-
-	/**
-	 * @var integer|string date_validation
+	 * @var int|string date_validation
 	 */
 	public $date_valid;
 
+	/**
+	 * @var array<int,string>
+	 */
 	public $meths;
+	/**
+	 * @var array<array{rowid:int,code:string,libelle:string,description:string,tracking:string,active:string}>
+	 */
 	public $listmeths; // List of carriers
 
 	/**
-	 * @var ?CommandeFournisseur
-	 */
-	public $commandeFournisseur;
-
-	/**
-	 * @var CommandeFournisseurDispatch[]
+	 * @var ReceptionLineBatch[]|CommandeFournisseurDispatch[]
 	 */
 	public $lines = array();
 
 
-	// detail of lot and qty = array(id in receptiondet_batch, batch, qty)
-	// We can use this to know warehouse planned to be used for each lot.
+	/**
+	 * @var stdClass[] detail of lot and qty = array(id in receptiondet_batch, batch, qty)
+	 *	// We can use this to know warehouse planned to be used for each lot.
+	 */
 	public $detail_batch;
 
 	const STATUS_DRAFT = 0;
 	const STATUS_VALIDATED = 1;
 	const STATUS_CLOSED = 2;
-
 
 
 	/**
@@ -154,6 +209,8 @@ class Reception extends CommonObject
 	public function __construct($db)
 	{
 		$this->db = $db;
+
+		$this->ismultientitymanaged = 1; // 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 	}
 
 	/**
@@ -189,8 +246,8 @@ class Reception extends CommonObject
 			}
 
 			$obj = new $classname();
+			'@phan-var-force ModelNumRefReception $obj';
 
-			$numref = "";
 			$numref = $obj->getNextValue($soc, $this);
 
 			if ($numref != "") {
@@ -292,7 +349,7 @@ class Reception extends CommonObject
 			$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."reception");
 
 			$sql = "UPDATE ".MAIN_DB_PREFIX."reception";
-			$sql .= " SET ref = '(PROV".$this->id.")'";
+			$sql .= " SET ref = '(PROV".((int) $this->id).")'";
 			$sql .= " WHERE rowid = ".((int) $this->id);
 
 			dol_syslog(get_class($this)."::create", LOG_DEBUG);
@@ -375,7 +432,7 @@ class Reception extends CommonObject
 
 		$sql = "SELECT e.rowid, e.entity, e.ref, e.fk_soc as socid, e.date_creation, e.ref_supplier, e.ref_ext, e.fk_user_author, e.fk_statut as status, e.billed";
 		$sql .= ", e.weight, e.weight_units, e.size, e.size_units, e.width, e.height";
-		$sql .= ", e.date_reception as date_reception, e.model_pdf,  e.date_delivery";
+		$sql .= ", e.date_reception as date_reception, e.model_pdf, e.date_delivery, e.date_valid";
 		$sql .= ", e.fk_shipping_method, e.tracking_number";
 		$sql .= ", el.fk_source as origin_id, el.sourcetype as origin";
 		$sql .= ", e.note_private, e.note_public";
@@ -416,10 +473,12 @@ class Reception extends CommonObject
 				$this->date = $this->db->jdate($obj->date_reception); // TODO deprecated
 				$this->date_reception = $this->db->jdate($obj->date_reception); // Date real
 				$this->date_delivery        = $this->db->jdate($obj->date_delivery); // Date planned
+				$this->date_valid        	= $this->db->jdate($obj->date_valid); // Date validation
 				$this->model_pdf            = $obj->model_pdf;
 				$this->shipping_method_id = $obj->fk_shipping_method;
 				$this->tracking_number      = $obj->tracking_number;
 				$this->origin               = ($obj->origin ? $obj->origin : 'commande'); // For compatibility
+				$this->origin_type          = ($obj->origin ? $obj->origin : 'commande'); // For compatibility
 				$this->origin_id            = $obj->origin_id;
 
 				$this->trueWeight           = $obj->weight;
@@ -538,7 +597,7 @@ class Reception extends CommonObject
 		$sql .= " ref='".$this->db->escape($numref)."'";
 		$sql .= ", fk_statut = 1";
 		$sql .= ", date_valid = '".$this->db->idate($now)."'";
-		$sql .= ", fk_user_valid = ".$user->id;
+		$sql .= ", fk_user_valid = ".((int) $user->id);
 		$sql .= " WHERE rowid = ".((int) $this->id);
 		dol_syslog(get_class($this)."::valid update reception", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -620,17 +679,17 @@ class Reception extends CommonObject
 		}
 
 		if (!$error) {
-			// Change status of order to "reception in process" or "totally received"
+			// Change status of purchase order to "reception in process" or "totally received"
 			$status = $this->getStatusDispatch();
 			if ($status < 0) {
 				$error++;
 			} else {
 				$trigger_key = '';
-				if ($status == CommandeFournisseur::STATUS_RECEIVED_COMPLETELY) {
-					$ret = $this->commandeFournisseur->Livraison($user, dol_now(), 'tot', '');
+				if ($this->origin_object instanceof CommandeFournisseur && $status == CommandeFournisseur::STATUS_RECEIVED_COMPLETELY) {
+					$ret = $this->origin_object->Livraison($user, dol_now(), 'tot', '');
 					if ($ret < 0) {
 						$error++;
-						$this->errors = array_merge($this->errors, $this->commandeFournisseur->errors);
+						$this->errors = array_merge($this->errors, $this->origin_object->errors);
 					}
 				} else {
 					$ret = $this->setStatut($status, $this->origin_id, 'commande_fournisseur', $trigger_key);
@@ -767,10 +826,10 @@ class Reception extends CommonObject
 					}
 				}
 
-				// qty wished in order supplier (origin)
-				foreach ($this->commandeFournisseur->lines as $origin_line) {
+				// qty wished in origin (purchase order, ...)
+				foreach ($this->origin_object->lines as $origin_line) {
 					// exclude lines not qualified for reception
-					if (!getDolGlobalInt('STOCK_SUPPORTS_SERVICES') && $origin_line->product_type > 0) {
+					if ((!getDolGlobalInt('STOCK_SUPPORTS_SERVICES') && $origin_line->product_type > 0) || $origin_line->product_type > 1) {
 						continue;
 					}
 
@@ -792,7 +851,7 @@ class Reception extends CommonObject
 						// there are some difference between the two arrays
 						// scan the array of results
 						foreach ($diff_array as $key => $value) {
-							// if the quantity delivered is greater or equal to ordered quantity
+							// if the quantity delivered is greater or equal to ordered quantity @phan-suppress-next-line PhanTypeInvalidDimOffset
 							if ($qty_received[$key] >= $qty_wished[$key]) {
 								$close++;
 							}
@@ -818,12 +877,12 @@ class Reception extends CommonObject
 	 * @param 	int			$entrepot_id		Id of warehouse
 	 * @param 	int			$id					Id of source line (supplier order line)
 	 * @param 	float		$qty				Quantity
-	 * @param	array		$array_options		extrafields array
+	 * @param	array<string, mixed>	$array_options		extrafields array
 	 * @param	string		$comment			Comment for stock movement
 	 * @param	int			$eatby				eat-by date
 	 * @param	int			$sellby				sell-by date
 	 * @param	string		$batch				Lot number
-	 * @param	double		$cost_price			Line cost
+	 * @param	float		$cost_price			Line cost
 	 * @return	int							Return integer <0 if KO, index of line if OK
 	 */
 	public function addline($entrepot_id, $id, $qty, $array_options = [], $comment = '', $eatby = null, $sellby = null, $batch = '', $cost_price = 0)
@@ -933,7 +992,7 @@ class Reception extends CommonObject
 			$this->ref_supplier = trim($this->ref_supplier);
 		}
 		if (isset($this->socid)) {
-			$this->socid = trim($this->socid);
+			$this->socid = (int) trim((string) $this->socid);
 		}
 		if (isset($this->fk_user_author)) {
 			$this->fk_user_author = (int) $this->fk_user_author;
@@ -951,22 +1010,22 @@ class Reception extends CommonObject
 			$this->statut = (int) $this->statut;
 		}
 		if (isset($this->trueDepth)) {
-			$this->trueDepth = trim($this->trueDepth);
+			$this->trueDepth = (float) trim((string) $this->trueDepth);
 		}
 		if (isset($this->trueWidth)) {
-			$this->trueWidth = trim($this->trueWidth);
+			$this->trueWidth = (float) trim((string) $this->trueWidth);
 		}
 		if (isset($this->trueHeight)) {
-			$this->trueHeight = trim($this->trueHeight);
+			$this->trueHeight = (float) trim((string) $this->trueHeight);
 		}
 		if (isset($this->size_units)) {
 			$this->size_units = trim((string) $this->size_units);
 		}
 		if (isset($this->weight_units)) {
-			$this->weight_units = trim((string) $this->weight_units);
+			$this->weight_units = (float) trim((string) $this->weight_units);
 		}
 		if (isset($this->trueWeight)) {
-			$this->weight = trim((string) $this->trueWeight);
+			$this->weight = (float) trim((string) $this->trueWeight);
 		}
 		if (isset($this->note_private)) {
 			$this->note_private = trim($this->note_private);
@@ -1086,6 +1145,11 @@ class Reception extends CommonObject
 					$mouvS->origin = null;
 
 					$result = $mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, $obj->qty, 0, $langs->trans("ReceptionDeletedInDolibarr", $this->ref), '', $obj->eatby, $obj->sellby, $obj->batch); // Price is set to 0, because we don't want to see WAP changed
+					if ($result < 0) {
+						$error++;
+						$this->error = $mouvS->error;
+						$this->errors = $mouvS->errors;
+					}
 				}
 			} else {
 				$error++;
@@ -1123,12 +1187,14 @@ class Reception extends CommonObject
 
 						if (!empty($this->origin) && $this->origin_id > 0) {
 							$this->fetch_origin();
-							if ($this->origin_object->statut == 4) {     // If order source of reception is "partially received"
+							$origin_object = $this->origin_object;
+							'@phan-var-force CommandeFournisseur $origin_object';
+							if ($origin_object->statut == 4) {     // If order source of reception is "partially received"
 								// Check if there is no more reception. If not, we can move back status of order to "validated" instead of "reception in progress"
-								$this->origin_object->loadReceptions();
+								$origin_object->loadReceptions();
 								//var_dump($this->$origin->receptions);exit;
-								if (count($this->origin_object->receptions) <= 0) {
-									$this->origin_object->setStatut(3); // ordered
+								if (count($origin_object->receptions) <= 0) {
+									$origin_object->setStatut(3); // ordered
 								}
 							}
 						}
@@ -1193,7 +1259,9 @@ class Reception extends CommonObject
 
 		require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.dispatch.class.php';
 
-		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."receptiondet_batch WHERE fk_reception = ".((int) $this->id);
+		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."receptiondet_batch";
+		$sql .= " WHERE fk_reception = ".((int) $this->id);
+
 		$resql = $this->db->query($sql);
 
 		if (!empty($resql)) {
@@ -1221,7 +1289,7 @@ class Reception extends CommonObject
 					$line->subprice = $obj->subprice;
 					$line->multicurrency_subprice = $obj->multicurrency_subprice;
 					$line->remise_percent = $obj->remise_percent;
-					$line->label = !empty($obj->label) ? $obj->label : $line->product->label;
+					$line->label = !empty($obj->label) ? $obj->label : (is_object($line->product) ? $line->product->label : '');
 					$line->ref_supplier = $obj->ref;
 					$line->total_ht = $obj->total_ht;
 					$line->total_ttc = $obj->total_ttc;
@@ -1246,6 +1314,7 @@ class Reception extends CommonObject
 					$detail_batch->sellby = $line->sellby;
 					$detail_batch->batch = $line->batch;
 					$detail_batch->qty = $line->qty;
+
 					$line->detail_batch[] = $detail_batch;
 				}
 
@@ -1259,7 +1328,7 @@ class Reception extends CommonObject
 	}
 
 	/**
-	 *	Return clicable link of object (with eventually picto)
+	 *	Return clickable link of object (with eventually picto)
 	 *
 	 *	@param      int			$withpicto      Add picto into link
 	 *	@param      int			$option         Where point the link
@@ -1377,11 +1446,11 @@ class Reception extends CommonObject
 	}
 
 	/**
-	 *	Return clicable link of object (with eventually picto)
+	 *	Return clickable link of object (with eventually picto)
 	 *
-	 *	@param      string	    $option                 Where point the link (0=> main card, 1,2 => shipment, 'nolink'=>No link)
-	 *  @param		array		$arraydata				Array of data
-	 *  @return		string								HTML Code for Kanban thumb.
+	 *	@param      string	    			$option                 Where point the link (0=> main card, 1,2 => shipment, 'nolink'=>No link)
+	 *  @param		array{string,mixed}		$arraydata				Array of data
+	 *  @return		string											HTML Code for Kanban thumb.
 	 */
 	public function getKanbanView($option = '', $arraydata = null)
 	{
@@ -1438,6 +1507,7 @@ class Reception extends CommonObject
 		$this->ref = 'SPECIMEN';
 		$this->specimen = 1;
 		$this->statut               = 1;
+		$this->status               = 1;
 		$this->date                 = $now;
 		$this->date_creation        = $now;
 		$this->date_valid           = $now;
@@ -1448,12 +1518,15 @@ class Reception extends CommonObject
 		$this->socid                = 1;
 
 		$this->origin_id            = 1;
-		$this->origin               = 'commande';
+		$this->origin_type          = 'supplier_order';
 		$this->origin_object        = $order;
-		$this->commandeFournisseur  = $order;	// deprecated
 
 		$this->note_private = 'Private note';
 		$this->note_public = 'Public note';
+
+		$this->tracking_number = 'TRACKID-ABC123';
+
+		$this->fk_incoterms = 1;
 
 		$nbp = 5;
 		$xnbp = 0;

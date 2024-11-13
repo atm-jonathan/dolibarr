@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2024       Frédéric France             <frederic.france@free.fr>
+ * Copyright (C) 2024		MDW							<mdeweerd@users.noreply.github.com>
  */
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -17,20 +18,36 @@
  * or see https://www.gnu.org/
  */
 
-require_once DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandlerInterface.php';
-
 /**
  * Parent class for log handlers
  */
-class LogHandler
+abstract class LogHandler
 {
+	/**
+	 * @var string Code for the handler
+	 */
+	public $code;
+
+	/**
+	 * @var int
+	 */
 	protected $ident = 0;
 
 	/**
-	 * @var string[] Array of errors messages
+	 * @var string[] Array of error messages
 	 */
 	public $errors = [];
 
+
+	/**
+	 * Return name of logger
+	 *
+	 * @return string
+	 */
+	public function getName()
+	{
+		return ucfirst($this->code);
+	}
 
 	/**
 	 * Content of the info tooltip.
@@ -65,7 +82,7 @@ class LogHandler
 	/**
 	 * Is the logger active ?
 	 *
-	 * @return int		1 if logger enabled
+	 * @return int<0,1>		1 if logger enabled
 	 */
 	public function isActive()
 	{
@@ -73,9 +90,9 @@ class LogHandler
 	}
 
 	/**
-	 * Configuration variables of the module
+	 *	Configuration variables of the module
 	 *
-	 * @return array
+	 * 	@return	array<array{name:string,constant:string,default:string,css?:string}>	Return array of configuration data
 	 */
 	public function configure()
 	{
@@ -97,11 +114,24 @@ class LogHandler
 	/**
 	 * Set current ident.
 	 *
-	 * @param	int		$ident		1=Increase ident of 1, -1=Decrease ident of 1
+	 * @param	int<-1,1>	$ident		1=Increase ident of 1, -1=Decrease ident of 1
 	 * @return 	void
 	 */
 	public function setIdent($ident)
 	{
 		$this->ident += $ident;
+	}
+
+	/**
+	 * Export the message
+	 *
+	 * @param	array{level:int,ip:string,ospid:string,osuser:string,message:string}	$content 	Array containing the info about the message
+	 * @param   string  $suffixinfilename   When output is a file, append this suffix into default log filename.
+	 * @return  void
+	 */
+	public function export($content, $suffixinfilename = '')
+	{
+		// Code to output log
+		return;
 	}
 }

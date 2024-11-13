@@ -4,6 +4,7 @@
  * Copyright (C) 2017	Regis Houssin			<regis.houssin@inodbox.com>
  * Copyright (C) 2021	Alexis LAURIER			<contact@alexislaurier.fr>
  * Copyright (C) 2024		MDW							<mdeweerd@users.noreply.github.com>
+ * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,6 +107,13 @@ call_user_func(
 require_once DOL_DOCUMENT_ROOT.'/api/class/api.class.php';
 require_once DOL_DOCUMENT_ROOT.'/api/class/api_access.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+/**
+ * @var Conf $conf
+ * @var DoliDB $db
+ * @var HookManager $hookmanager
+ * @var Translate $langs
+ * @var User $user
+ */
 
 
 $url = $_SERVER['PHP_SELF'];
@@ -167,6 +175,7 @@ if (!empty($reg[1]) && $reg[1] == 'explorer' && ($reg[2] == '/swagger.json' || $
 	$refreshcache = true;
 	if (!is_writable($conf->api->dir_temp)) {
 		print 'Erreur temp dir api/temp not writable';
+		header('HTTP/1.1 500 temp dir api/temp not writable');
 		exit(0);
 	}
 }
@@ -266,8 +275,8 @@ if (!empty($reg[1]) && $reg[1] == 'explorer' && ($reg[2] == '/swagger.json' || $
 									continue;
 								}
 
-								//$conf->global->MAIN_MODULE_API_LOGIN_DISABLED = 1;
-								if ($file_searched == 'api_login.class.php' && getDolGlobalString('MAIN_MODULE_API_LOGIN_DISABLED')) {
+								//$conf->global->API_DISABLE_LOGIN_API = 1;
+								if ($file_searched == 'api_login.class.php' && getDolGlobalString('API_DISABLE_LOGIN_API')) {
 									continue;
 								}
 
@@ -438,6 +447,52 @@ if (Luracast\Restler\Defaults::$returnResponse) {
 
 	// Restler did not output data yet, we return it now
 	echo $result;
+}
+
+if (getDolGlobalInt("API_ENABLE_COUNT_CALLS") && $api->r->responseCode == 200) {
+	$error = 0;
+	$db->begin();
+	$userid = DolibarrApiAccess::$user->id;
+
+	$sql = "SELECT up.value";
+	$sql .= " FROM ".MAIN_DB_PREFIX."user_param as up";
+	$sql .= " WHERE up.param = 'API_COUNT_CALL'";
+	$sql .= " AND up.fk_user = ".((int) $userid);
+	$sql .= " AND up.entity = ".((int) $conf->entity);
+
+	$result = $db->query($sql);
+	if ($result) {
+		$updateapi = false;
+		$nbrows = $db->num_rows($result);
+		if ($nbrows == 0) {
+			$sql2 = "INSERT INTO ".MAIN_DB_PREFIX."user_param";
+			$sql2 .= " (fk_user, entity, param, value)";
+			$sql2 .= " VALUES (".((int) $userid).", ".((int) $conf->entity).", 'API_COUNT_CALL', 1)";
+		} else {
+			$updateapi = true;
+			$sql2 = "UPDATE ".MAIN_DB_PREFIX."user_param as up";
+			$sql2 .= " SET up.value = up.value + 1";
+			$sql2 .= " WHERE up.param = 'API_COUNT_CALL'";
+			$sql2 .= " AND up.fk_user = ".((int) $userid);
+			$sql2 .= " AND up.entity = ".((int) $conf->entity);
+		}
+
+		$result2 = $db->query($sql2);
+		if (!$result2) {
+			$modeapicall = $updateapi ? 'updating' : 'inserting';
+			dol_syslog('Error while '.$modeapicall. ' API_COUNT_CALL for user '.$userid, LOG_ERR);
+			$error++;
+		}
+	} else {
+		dol_syslog('Error on select API_COUNT_CALL for user '.$userid, LOG_ERR);
+		$error++;
+	}
+
+	if ($error) {
+		$db->rollback();
+	} else {
+		$db->commit();
+	}
 }
 
 // Call API termination method

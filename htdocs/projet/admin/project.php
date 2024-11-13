@@ -7,6 +7,7 @@
  * Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
  * Copyright (C) 2018		Ferran Marcet		<fmarcet@2byte.es>
  * Copyright (C) 2024		MDW							<mdeweerd@users.noreply.github.com>
+ * Copyright (C) 2024       Frédéric France             <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +36,15 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 
+/**
+ * @var Conf $conf
+ * @var DoliDB $db
+ * @var HookManager $hookmanager
+ * @var Societe $mysoc
+ * @var Translate $langs
+ * @var User $user
+ */
+
 // Load translation files required by the page
 $langs->loadLangs(array('admin', 'errors', 'other', 'projects'));
 
@@ -54,7 +64,7 @@ $type = 'project';
 /*
  * Actions
  */
-
+$error = 0;
 include DOL_DOCUMENT_ROOT.'/core/actions_setmoduleoptions.inc.php';
 
 if ($action == 'updateMask') {
@@ -79,7 +89,7 @@ if ($action == 'updateMask') {
 if ($action == 'updateMaskTask') {
 	$maskconstmasktask = GETPOST('maskconsttask', 'aZ09');
 	$masktaskt = GETPOST('masktask', 'alpha');
-
+	$res = 0;
 	if ($maskconstmasktask && preg_match('/_MASK$/', $maskconstmasktask)) {
 		$res = dolibarr_set_const($db, $maskconstmasktask, $masktaskt, 'chaine', 0, '', $conf->entity);
 	}
@@ -115,13 +125,15 @@ if ($action == 'updateMaskTask') {
 		require_once $file;
 
 		$module = new $classname($db);
+		'@phan-var-force ModelePDFProjects $module';
+		/** @var ModelePDFProjects $module */
 
 		if ($module->write_file($project, $langs) > 0) {
 			header("Location: ".DOL_URL_ROOT."/document.php?modulepart=project&file=SPECIMEN.pdf");
 			return;
 		} else {
-			setEventMessages($obj->error, $obj->errors, 'errors');
-			dol_syslog($obj->error, LOG_ERR);
+			setEventMessages($module->error, $module->errors, 'errors');
+			dol_syslog($module->error, LOG_ERR);
 		}
 	} else {
 		setEventMessages($langs->trans("ErrorModuleNotFound"), null, 'errors');
@@ -149,13 +161,15 @@ if ($action == 'updateMaskTask') {
 		require_once $file;
 
 		$module = new $classname($db);
+		'@phan-var-force ModelePDFTask $module';
+		/** @var ModelePDFTask $module */
 
 		if ($module->write_file($project, $langs) > 0) {
 			header("Location: ".DOL_URL_ROOT."/document.php?modulepart=project_task&file=SPECIMEN.pdf");
 			return;
 		} else {
-			setEventMessages($obj->error, $obj->errors, 'errors');
-			dol_syslog($obj->error, LOG_ERR);
+			setEventMessages($module->error, $module->errors, 'errors');
+			dol_syslog($module->error, LOG_ERR);
 		}
 	} else {
 		setEventMessages($langs->trans("ErrorModuleNotFound"), null, 'errors');
@@ -170,14 +184,14 @@ if ($action == 'updateMaskTask') {
 } elseif ($action == 'del') {
 	$ret = delDocumentModel($value, $type);
 	if ($ret > 0) {
-		if ($conf->global->PROJECT_ADDON_PDF == "$value") {
+		if (getDolGlobalString('PROJECT_ADDON_PDF') == "$value") {
 			dolibarr_del_const($db, 'PROJECT_ADDON_PDF', $conf->entity);
 		}
 	}
 } elseif ($action == 'deltask') {
 	$ret = delDocumentModel($value, 'project_task');
 	if ($ret > 0) {
-		if ($conf->global->PROJECT_TASK_ADDON_PDF == "$value") {
+		if (getDolGlobalString('PROJECT_TASK_ADDON_PDF') == "$value") {
 			dolibarr_del_const($db, 'PROJECT_TASK_ADDON_PDF', $conf->entity);
 		}
 	}
@@ -240,7 +254,7 @@ if ($action == 'updateMaskTask') {
 
 $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
 
-llxHeader("", $langs->trans("ProjectsSetup"));
+llxHeader("", $langs->trans("ProjectsSetup"), '', '', 0, 0, '', '', '', 'mod-project page-admin');
 
 $form = new Form($db);
 
@@ -269,7 +283,7 @@ print '<td width="80">&nbsp;</td></tr>'."\n";
 print '<tr class="oddeven">';
 print '<td width="80%">'.$langs->trans("ManageOpportunitiesStatus").'</td>';
 print '<td width="60" class="right">';
-print ajax_constantonoff("PROJECT_USE_OPPORTUNITIES", null, null, 0, 0, 1);
+print ajax_constantonoff("PROJECT_USE_OPPORTUNITIES", array(), null, 0, 0, 1);
 print '</td><td class="right">';
 print "</td>";
 print '</tr>';
@@ -321,6 +335,7 @@ foreach ($dirmodels as $reldir) {
 					require_once $dir.$file.'.php';
 
 					$module = new $file();
+					'@phan-var-force ModeleNumRefProjects $module';
 
 					// Show modules according to features level
 					if ($module->version == 'development' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 2) {
@@ -349,7 +364,7 @@ foreach ($dirmodels as $reldir) {
 						print '</td>'."\n";
 
 						print '<td class="center">';
-						if ($conf->global->PROJECT_ADDON == 'mod_'.$classname) {
+						if (getDolGlobalString('PROJECT_ADDON') == 'mod_'.$classname) {
 							print img_picto($langs->trans("Activated"), 'switch_on');
 						} else {
 							print '<a class="reposition" href="'.$_SERVER["PHP_SELF"].'?action=setmod&token='.newToken().'&value=mod_'.$classname.'" alt="'.$langs->trans("Default").'">'.img_picto($langs->trans("Disabled"), 'switch_off').'</a>';
@@ -363,7 +378,7 @@ foreach ($dirmodels as $reldir) {
 						$htmltooltip = '';
 						$htmltooltip .= ''.$langs->trans("Version").': <b>'.$module->getVersion().'</b><br>';
 						$nextval = $module->getNextValue($mysoc, $project);
-						if ("$nextval" != $langs->trans("NotAvailable")) {	// Keep " on nextval
+						if ((string) $nextval != $langs->trans("NotAvailable")) {
 							$htmltooltip .= ''.$langs->trans("NextValue").': ';
 							if ($nextval) {
 								$htmltooltip .= $nextval.'<br>';
@@ -419,6 +434,8 @@ if (!getDolGlobalString('PROJECT_HIDE_TASKS')) {
 						require_once $dir.$file.'.php';
 
 						$module = new $file();
+						'@phan-var-force ModeleNumRefTask $module';
+						/** @var ModeleNumRefTask $module */
 
 						// Show modules according to features level
 						if ($module->version == 'development' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 2) {
@@ -510,7 +527,9 @@ if ($resql) {
 	$num_rows = $db->num_rows($resql);
 	while ($i < $num_rows) {
 		$array = $db->fetch_array($resql);
-		array_push($def, $array[0]);
+		if (is_array($array)) {
+			array_push($def, $array[0]);
+		}
 		$i++;
 	}
 } else {
@@ -552,6 +571,7 @@ foreach ($dirmodels as $reldir) {
 
 							require_once $dir.'/'.$file;
 							$module = new $classname($db);
+							'@phan-var-force ModelePDFProjects $module';
 
 							$modulequalified = 1;
 							if ($module->version == 'development' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 2) {
@@ -566,7 +586,7 @@ foreach ($dirmodels as $reldir) {
 								print(empty($module->name) ? $name : $module->name);
 								print "</td><td>\n";
 								if (method_exists($module, 'info')) {
-									print $module->info($langs);
+									print $module->info($langs);  // @phan-suppress-current-line PhanUndeclaredMethod
 								} else {
 									print $module->description;
 								}
@@ -587,7 +607,7 @@ foreach ($dirmodels as $reldir) {
 
 								// Default
 								print "<td class=\"center\">";
-								if ($conf->global->PROJECT_ADDON_PDF == "$name") {
+								if (getDolGlobalString('PROJECT_ADDON_PDF') == "$name") {
 									print img_picto($langs->trans("Default"), 'on');
 								} else {
 									print '<a class="reposition" href="'.$_SERVER["PHP_SELF"].'?action=setdoc&token='.newToken().'&value='.urlencode($name).'&scan_dir='.urlencode($module->scandir).'&label='.urlencode($module->name).'" alt="'.$langs->trans("Default").'">'.img_picto($langs->trans("Disabled"), 'off').'</a>';
@@ -654,7 +674,9 @@ if (!getDolGlobalString('PROJECT_HIDE_TASKS')) {
 		$num_rows = $db->num_rows($resql);
 		while ($i < $num_rows) {
 			$array = $db->fetch_array($resql);
-			array_push($def, $array[0]);
+			if (is_array($array)) {
+				array_push($def, $array[0]);
+			}
 			$i++;
 		}
 	} else {
@@ -695,6 +717,7 @@ if (!getDolGlobalString('PROJECT_HIDE_TASKS')) {
 
 								require_once $dir.'/'.$file;
 								$module = new $classname($db);
+								'@phan-var-force ModelePDFTask $module';
 
 								$modulequalified = 1;
 								if ($module->version == 'development' && getDolGlobalInt('MAIN_FEATURES_LEVEL') < 2) {
@@ -709,7 +732,7 @@ if (!getDolGlobalString('PROJECT_HIDE_TASKS')) {
 									print(empty($module->name) ? $name : $module->name);
 									print "</td><td>\n";
 									if (method_exists($module, 'info')) {
-										print $module->info($langs);
+										print $module->info($langs);  // @phan-suppress-current-line PhanUndeclaredMethod
 									} else {
 										print $module->description;
 									}

@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2003-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2003      Xavier Dutoit        <doli@sydesy.com>
- * Copyright (C) 2004-2020 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2017 Regis Houssin      	<regis.houssin@inodbox.com>
- * Copyright (C) 2006 	   Jean Heimburger    	<jean@tiaris.info>
- * Copyright (C) 2024		MDW							<mdeweerd@users.noreply.github.com>
+/* Copyright (C) 2003-2007  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2003       Xavier Dutoit           <doli@sydesy.com>
+ * Copyright (C) 2004-2020  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2017  Regis Houssin           <regis.houssin@inodbox.com>
+ * Copyright (C) 2006 	    Jean Heimburger         <jean@tiaris.info>
+ * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-require_once DOL_DOCUMENT_ROOT.'/core/class/doldeprecationhandler.class.php';
 
 /**
  *	\file       	htdocs/core/class/conf.class.php
@@ -31,17 +30,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/doldeprecationhandler.class.php';
 
 /**
  *  Class to stock current configuration
- *
  */
 class Conf extends stdClass
 {
-	use DolDeprecationHandler;
-	/**
-	 * When true, indicates to the DeprecationHandler that this
-	 * class supports dynamic properties.
-	 */
-	protected $enableDynamicProperties = true;
-
 	/**
 	 * @var Object 	Associative array with properties found in conf file
 	 */
@@ -64,37 +55,61 @@ class Conf extends stdClass
 
 	//! To store some setup of generic modules
 	public $mycompany;
+
+	/**
+	 * @var stdClass
+	 */
 	public $admin;
+
+	/**
+	 * @var stdClass
+	 */
 	public $medias;
-	//! To store properties of multi-company
+
+	/**
+	 * @var stdClass To store properties of multi-company
+	 */
 	public $multicompany;
 
 	//! To store module status of special module names
 	public $expedition_bon;
 	public $delivery_note;
 
-
-	//! To store if javascript/ajax is enabked
+	/**
+	 * @var int To store if javascript/ajax is enabled
+	 */
 	public $use_javascript_ajax;
-	//! To store if javascript/ajax is enabked
+
+	/**
+	 * @var int To store if compute is enabled
+	 */
 	public $disable_compute;
-	//! Used to store current currency (ISO code like 'USD', 'EUR', ...). To get the currency symbol: $langs->getCurrencySymbol($this->currency)
+
+	/**
+	 * @var string Used to store current currency (ISO code like 'USD', 'EUR', ...). To get the currency symbol: $langs->getCurrencySymbol($this->currency)
+	 */
 	public $currency;
 
 	/**
-	 * @var string
+	 * @var string Contains current theme ("eldy", "auguria", ...)
 	 */
-	public $theme; // Contains current theme ("eldy", "auguria", ...)
-	//! Used to store current css (from theme)
+	public $theme;
+
+	/**
+	 * @var string Contains full path of css page ("/theme/eldy/style.css.php", ...)
+	 */
+	public $css;
+
 	/**
 	 * @var string
 	 */
-	public $css; // Contains full path of css page ("/theme/eldy/style.css.php", ...)
-
 	public $email_from;
 
-	//! Used to store current menu handler
+	/**
+	 * @var string Used to store current menu handler
+	 */
 	public $standard_menu;
+
 	/**
 	 * @var array<string,string>  List of activated modules
 	 */
@@ -128,15 +143,34 @@ class Conf extends stdClass
 	 * @var int Used to store running instance for multi-company (default 1)
 	 */
 	public $entity = 1;
+
 	/**
 	 * @var int[] Used to store list of entities to use for each element
 	 */
 	public $entities = array();
 
-	public $dol_hide_topmenu; // Set if we force param dol_hide_topmenu into login url
-	public $dol_hide_leftmenu; // Set if we force param dol_hide_leftmenu into login url
-	public $dol_optimize_smallscreen; // Set if we force param dol_optimize_smallscreen into login url or if browser is smartphone
-	public $dol_no_mouse_hover; // Set if we force param dol_no_mouse_hover into login url or if browser is smartphone
+	/**
+	 * @var int Set if we force param dol_hide_topmenu into login url
+	 */
+	public $dol_hide_topmenu;
+
+	/**
+	 * @var int Set if we force param dol_hide_leftmenu into login url
+	 */
+	public $dol_hide_leftmenu;
+
+	/**
+	 * @var int Set if we force param dol_optimize_smallscreen into login url or if browser is smartphone
+	 */
+	public $dol_optimize_smallscreen;
+
+	/**
+	 * @var int Set if we force param dol_no_mouse_hover into login url or if browser is smartphone
+	 */
+	public $dol_no_mouse_hover;
+	/**
+	 * @var int
+	 */
 	public $dol_use_jmobile; // Set if we force param dol_use_jmobile into login url. 0=default, 1=to say we use app from a webview app, 2=to say we use app from a webview app and keep ajax
 
 	public $format_date_short; // Format of day with PHP/C tags (strftime functions)
@@ -150,44 +184,53 @@ class Conf extends stdClass
 	public $format_date_hour_text_short;
 	public $format_date_hour_text;
 
+	/**
+	 * @var int limit for list
+	 */
 	public $liste_limit;
 
-	public $tzuserinputkey = 'tzserver';		// Use 'tzuserrel' to always store date in GMT and show date in time zone of user.
+	/**
+	 * @var int checkboxes are on left column if 1
+	 */
+	public $main_checkbox_left_column;
+
+	/**
+	 * @var string  Use 'tzuserrel' to always store date in GMT and show date in time zone of user.
+	 */
+	public $tzuserinputkey = 'tzserver';
 
 
 	// TODO Remove this part.
 
 	/**
-	 * @var stdClass  Supplier
+	 * @var stdClass  	Supplier
 	 */
 	public $fournisseur;
 
 	/**
-	 * @var stdClass
+	 * @var stdClass	Product
 	 */
 	public $product;
 
 	/**
 	 * @var stdClass
-	 * @deprecated      Use $product
-	 * @see $product
+	 * @deprecated Use product
 	 */
-	private $produit;
+	public $produit;
 
 	/**
-	 * @var stdClass
+	 * @var stdClass  	service
 	 */
 	public $service;
 
 	/**
 	 * @var stdClass
-	 * @deprecated      Use $contract
-	 * @see $contract
+	 * @deprecated Use contract
 	 */
-	private $contrat;
+	public $contrat;
 
 	/**
-	 * @var stdClass
+	 * @var stdClass Contract
 	 */
 	public $contract;
 
@@ -203,15 +246,14 @@ class Conf extends stdClass
 
 	/**
 	 * @var stdClass
-	 * @deprecated      Use $order
-	 * @see $order
 	 */
-	private $commande;
+	public $propal;
 
 	/**
 	 * @var stdClass
+	 * @deprecated Use order
 	 */
-	public $propal;
+	public $commande;
 
 	/**
 	 * @var stdClass
@@ -220,11 +262,9 @@ class Conf extends stdClass
 
 	/**
 	 * @var stdClass
-	 * @deprecated      Use $invoice
-	 * @see $invoice
+	 * @deprecated Use invoice
 	 */
-	private $facture;
-
+	public $facture;
 
 	/**
 	 * @var stdClass
@@ -238,11 +278,9 @@ class Conf extends stdClass
 
 	/**
 	 * @var stdClass
-	 * @deprecated      Use $member
-	 * @see $member
+	 * @deprecated Use member
 	 */
-	private $adherent;
-
+	public $adherent;
 
 	/**
 	 * @var stdClass
@@ -268,14 +306,10 @@ class Conf extends stdClass
 	 * @var stdClass
 	 */
 	public $productbatch;
-
 	/**
-	 * @var stdClass
-	 * @deprecated      Use $project
-	 * @see $project
+	 * @deprecated Use project
 	 */
-	private $projet;
-
+	public $projet;
 
 	/**
 	 * @var stdClass
@@ -301,34 +335,6 @@ class Conf extends stdClass
 	 * @var stdClass
 	 */
 	public $category;
-
-	/**
-	 * @var stdClass
-	 * @deprecated      Use $category
-	 * @see $category
-	 */
-	private $categorie;
-
-	/**
-	 * @var stdClass
-	 * @deprecated      Use $supplier_proposal
-	 * @see $supplier_proposal
-	 */
-	private $supplierproposal;
-
-	/**
-	 * @var stdClass
-	 * @deprecated      Use $delivery_note
-	 * @see $delivery_note
-	 */
-	private $expedition;
-
-	/**
-	 * @var stdClass
-	 * @deprecated      Use $bank
-	 * @see $bank
-	 */
-	private $banque;
 
 
 	/**
@@ -372,7 +378,8 @@ class Conf extends stdClass
 			'hooks' => array(),
 			'dir' => array(),
 			'syslog' => array(),
-			'websitetemplates' => array()
+			'websitetemplates' => array(),
+			//'captcha' => array()	// Can be removed,this does not generates warning
 		);
 
 		// First level object that are modules.
@@ -381,43 +388,20 @@ class Conf extends stdClass
 		$this->fournisseur = new stdClass();
 		$this->product = new stdClass();
 		$this->service = new stdClass();
-		$this->contract = new stdClass();
+		$this->contrat = new stdClass();
 		$this->actions = new stdClass();
 		$this->agenda = new stdClass();
-		$this->order = new stdClass();
+		$this->commande = new stdClass();
 		$this->propal = new stdClass();
-		$this->invoice = new stdClass();
+		$this->facture = new stdClass();
 		$this->user	= new stdClass();
-		$this->member = new stdClass();
+		$this->adherent = new stdClass();
 		$this->bank = new stdClass();
+		$this->mailing = new stdClass();
 		$this->notification = new stdClass();
 		$this->expensereport = new stdClass();
 		$this->productbatch = new stdClass();
-	}
-
-	/**
-	 * Provide list of deprecated properties and replacements
-	 *
-	 * @return array<string,string>
-	 */
-	protected function deprecatedProperties()
-	{
-		return MODULE_MAPPING
-		+ array(
-			// Previously detected module names, already in mapping
-			//'adherent' => 'member',
-			//'banque' => 'bank',
-			//'categorie' => 'category',
-			//'commande' => 'order',
-			//'contrat' => 'contract',
-			//'expedition' => 'delivery_note',
-			//'facture' => 'invoice',
-			//'projet' => 'project',
-
-			// Other, not deprecated module names
-			'produit' => 'product',
-			'supplierproposal' => 'supplier_proposal',
-		);
+		$this->api = new stdClass();
 	}
 
 
@@ -472,16 +456,17 @@ class Conf extends stdClass
 		// First level object
 		// TODO Remove this part.
 		$this->fournisseur = new stdClass();
+		$this->compta = new stdClass();
 		$this->product = new stdClass();
 		$this->service = new stdClass();
-		$this->contract = new stdClass();
+		$this->contrat = new stdClass();
 		$this->actions = new stdClass();
 		$this->agenda = new stdClass();
-		$this->order = new stdClass();
+		$this->commande = new stdClass();
 		$this->propal = new stdClass();
-		$this->invoice = new stdClass();
+		$this->facture = new stdClass();
 		$this->user	= new stdClass();
-		$this->member = new stdClass();
+		$this->adherent = new stdClass();
 		$this->bank = new stdClass();
 		$this->notification = new stdClass();
 		$this->expensereport = new stdClass();
@@ -550,7 +535,7 @@ class Conf extends stdClass
 								}
 								$this->modules_parts[$partname][$params[0]][] = $value; // $value may be a string or an array
 							} elseif (preg_match('/^MAIN_MODULE_([0-9A-Z_]+)_([A-Z]+)$/i', $key, $reg)) {
-								// If this is constant for all generic part activated by a module. It initializes
+								// If this is a constant for all generic part activated by a module. It initializes
 								// modules_parts['login'], modules_parts['menus'], modules_parts['substitutions'], modules_parts['triggers'], modules_parts['tpl'],
 								// modules_parts['models'], modules_parts['theme']
 								// modules_parts['sms'],
@@ -562,7 +547,9 @@ class Conf extends stdClass
 									$this->modules_parts[$partname] = array();
 								}
 
+								//$arrValue = json_decode($value, true, null, JSON_BIGINT_AS_STRING|JSON_THROW_ON_ERROR);
 								$arrValue = json_decode($value, true);
+								//var_dump($key); var_dump($value); var_dump($arrValue);
 
 								if (is_array($arrValue)) {
 									$newvalue = $arrValue;
@@ -570,6 +557,8 @@ class Conf extends stdClass
 									$newvalue = '/'.$modulename.'/core/'.$partname.'/';
 								} elseif (in_array($partname, array('models', 'theme', 'websitetemplates'))) {
 									$newvalue = '/'.$modulename.'/';
+								} elseif (in_array($partname, array('captcha'))) {
+									$newvalue = '/'.$modulename.'/core/modules/security/'.$partname.'/';
 								} elseif ($value == 1) {
 									$newvalue = '/'.$modulename.'/core/modules/'.$partname.'/'; // ex: partname = societe
 								} else {	// $partname can be any other value like 'sms', ...
@@ -582,9 +571,11 @@ class Conf extends stdClass
 							} elseif (preg_match('/^MAIN_MODULE_([0-9A-Z_]+)$/i', $key, $reg)) {
 								// If this is a module constant (must be at end)
 								$modulename = strtolower($reg[1]);
-								$mapping = $this->deprecatedProperties();
-								if (array_key_exists($modulename, $mapping)) {
-									$modulename = $mapping[$modulename];
+								if ($modulename == 'propale') {
+									$modulename = 'propal';
+								}
+								if ($modulename == 'supplierproposal') {
+									$modulename = 'supplier_proposal';
 								}
 								$this->modules[$modulename] = $modulename; // Add this module in list of enabled modules
 
@@ -594,7 +585,20 @@ class Conf extends stdClass
 									$this->$modulename = new stdClass();	// We need this to use the ->enabled and the ->multidir, ->dir...
 								}
 								$this->$modulename->enabled = true;	// TODO Remove this
-								//}
+
+								// Duplicate entry with the new name
+								/*
+								$mapping = $this->deprecatedProperties();
+								if (array_key_exists($modulename, $mapping)) {
+									$newmodulename = $mapping[$modulename];
+									$this->modules[$newmodulename] = $newmodulename;
+
+									if (!isset($this->$newmodulename) || !is_object($this->$newmodulename)) {
+										$this->$newmodulename = new stdClass();	// We need this to use the ->enabled and the ->multidir, ->dir...
+									}
+									$this->$newmodulename->enabled = true;	// TODO Remove this
+								}
+								*/
 							}
 						}
 					}
@@ -799,6 +803,11 @@ class Conf extends stdClass
 				}
 			}
 
+			// Module compta
+			$this->compta->payment = new stdClass();
+			$this->compta->payment->dir_output				= $rootfordata."/compta/payment";
+			$this->compta->payment->dir_temp					= $rootfortemp."/compta/payment/temp";
+
 			// Module product/service
 			$this->product->multidir_output 		= array($this->entity => $rootfordata."/produit");
 			$this->product->multidir_temp			= array($this->entity => $rootfortemp."/produit/temp");
@@ -814,12 +823,12 @@ class Conf extends stdClass
 			$this->productbatch->multidir_output = array($this->entity => $rootfordata."/productlot");
 			$this->productbatch->multidir_temp = array($this->entity => $rootfortemp."/productlot/temp");
 
-			// Module contract
-			$this->contract->multidir_output = array($this->entity => $rootfordata."/contract");
-			$this->contract->multidir_temp = array($this->entity => $rootfortemp."/contract/temp");
+			// Module contrat
+			$this->contrat->multidir_output = array($this->entity => $rootfordata."/contract");
+			$this->contrat->multidir_temp = array($this->entity => $rootfortemp."/contract/temp");
 			// For backward compatibility
-			$this->contract->dir_output = $rootfordata."/contract";
-			$this->contract->dir_temp = $rootfortemp."/contract/temp";
+			$this->contrat->dir_output = $rootfordata."/contract";
+			$this->contrat->dir_temp = $rootfortemp."/contract/temp";
 
 			// Module bank
 			$this->bank->multidir_output = array($this->entity => $rootfordata."/bank");
@@ -855,12 +864,12 @@ class Conf extends stdClass
 				$this->global->MAIN_UMASK = '0660'; // Default mask
 			} else {
 				// We remove the execute bits on the file umask
-				$tmpumask = (octdec($this->global->MAIN_UMASK) & 0666);
+				$tmpumask = (octdec(getDolGlobalString('MAIN_UMASK')) & 0666);
 				$tmpumask = decoct($tmpumask);
-				if (!preg_match('/^0/', $tmpumask)) {
+				if (!preg_match('/^0/', $tmpumask)) {	// Convert string '123' into octal representation '0123'
 					$tmpumask = '0'.$tmpumask;
 				}
-				if (empty($tmpumask) || $tmpumask === '0') {
+				if (empty($tmpumask)) {		// when $tmpmask is null, '', or '0'
 					$tmpumask = '0664';
 				}
 				$this->global->MAIN_UMASK = $tmpumask;
@@ -869,7 +878,7 @@ class Conf extends stdClass
 			// conf->use_javascript_ajax
 			$this->use_javascript_ajax = 1;
 			if (isset($this->global->MAIN_DISABLE_JAVASCRIPT)) {
-				$this->use_javascript_ajax = !$this->global->MAIN_DISABLE_JAVASCRIPT;
+				$this->use_javascript_ajax = (int) !$this->global->MAIN_DISABLE_JAVASCRIPT;
 			}
 			// If no javascript_ajax, Ajax features are disabled.
 			if (empty($this->use_javascript_ajax)) {
@@ -941,20 +950,30 @@ class Conf extends stdClass
 				$this->global->MAIN_HTML_TITLE = 'thirdpartynameonly,contactnameonly,projectnameonly';
 			}
 
-			// conf->liste_limit = constante de taille maximale des listes
-			if (empty($this->global->MAIN_SIZE_LISTE_LIMIT)) {
-				$this->global->MAIN_SIZE_LISTE_LIMIT = 15;
+			// conf->liste_limit = constant to limit size of lists
+			$this->liste_limit = getDolGlobalInt('MAIN_SIZE_LISTE_LIMIT', 15);
+			if ((int) $this->liste_limit <= 0) {
+				// Mode automatic.
+				$this->liste_limit = 15;
+				if (!empty($_SESSION['dol_screenheight']) && $_SESSION['dol_screenheight'] < 910) {
+					$this->liste_limit = 10;
+				} elseif (!empty($_SESSION['dol_screenheight']) && $_SESSION['dol_screenheight'] > 1130) {
+					$this->liste_limit = 20;
+				}
 			}
-			$this->liste_limit = $this->global->MAIN_SIZE_LISTE_LIMIT;
 
-			// conf->product->limit_size = constante de taille maximale des select de produit
+			// conf->main_checkbox_left_column = constant to set checkbox list to left
+			if (!isset($this->main_checkbox_left_column)) {
+				$this->main_checkbox_left_column = getDolGlobalInt("MAIN_CHECKBOX_LEFT_COLUMN");
+			}
+
+			// Set PRODUIT_LIMIT_SIZE if never defined
 			if (!isset($this->global->PRODUIT_LIMIT_SIZE)) {
 				$this->global->PRODUIT_LIMIT_SIZE = 1000;
 			}
-			$this->product->limit_size = $this->global->PRODUIT_LIMIT_SIZE;
 
 			// Set PRODUIT_DESC_IN_FORM_ACCORDING_TO_DEVICE, may be modified later according to browser
-			$this->global->PRODUIT_DESC_IN_FORM_ACCORDING_TO_DEVICE = (isset($this->global->PRODUIT_DESC_IN_FORM) ? $this->global->PRODUIT_DESC_IN_FORM : 0);
+			$this->global->PRODUIT_DESC_IN_FORM_ACCORDING_TO_DEVICE = getDolGlobalInt('PRODUIT_DESC_IN_FORM');
 
 			// conf->theme et $this->css
 			if (empty($this->global->MAIN_THEME)) {
@@ -1023,6 +1042,9 @@ class Conf extends stdClass
 			if (!isset($this->global->PDF_ALLOW_HTML_FOR_FREE_TEXT)) {
 				$this->global->PDF_ALLOW_HTML_FOR_FREE_TEXT = 1; // allow html content into free footer text
 			}
+			if (!isset($this->global->MAIN_PDF_PROPAL_USE_ELECTRONIC_SIGNING)) {
+				$this->global->MAIN_PDF_PROPAL_USE_ELECTRONIC_SIGNING = 1;
+			}
 
 			// Default max file size for upload (deprecated)
 			//$this->maxfilesize = (empty($this->global->MAIN_UPLOAD_DOC) ? 0 : (int) $this->global->MAIN_UPLOAD_DOC * 1024);
@@ -1071,6 +1093,7 @@ class Conf extends stdClass
 					$this->global->MAIN_MODULES_FOR_EXTERNAL .= ",".$key;
 				}
 			}
+			//$this->global->MAIN_MODULES_FOR_EXTERNAL .= ",ecm";
 
 			// Enable select2
 			if (empty($this->global->MAIN_USE_JQUERY_MULTISELECT) || $this->global->MAIN_USE_JQUERY_MULTISELECT == '1') {
@@ -1102,23 +1125,23 @@ class Conf extends stdClass
 			// Delay before warnings
 			// Avoid strict errors. TODO: Replace xxx->warning_delay with a property ->warning_delay_xxx
 			if (isset($this->agenda)) {
-				$this->member->subscription = new stdClass();
-				$this->member->subscription->warning_delay = (isset($this->global->MAIN_DELAY_MEMBERS) ? (int) $this->global->MAIN_DELAY_MEMBERS : 0) * 86400;
+				$this->adherent->subscription = new stdClass();
+				$this->adherent->subscription->warning_delay = (isset($this->global->MAIN_DELAY_MEMBERS) ? (int) $this->global->MAIN_DELAY_MEMBERS : 0) * 86400;
 			}
 			if (isset($this->agenda)) {
 				$this->agenda->warning_delay = (isset($this->global->MAIN_DELAY_ACTIONS_TODO) ? (int) $this->global->MAIN_DELAY_ACTIONS_TODO : 7) * 86400;
 			}
-			if (isset($this->project)) {
-				$this->project->warning_delay = (getDolGlobalInt('MAIN_DELAY_PROJECT_TO_CLOSE', 7) * 86400);
-				$this->project->task = new StdClass();
-				$this->project->task->warning_delay = (getDolGlobalInt('MAIN_DELAY_TASKS_TODO', 7) * 86400);
+			if (isset($this->projet)) {
+				$this->projet->warning_delay = (getDolGlobalInt('MAIN_DELAY_PROJECT_TO_CLOSE', 7) * 86400);
+				$this->projet->task = new StdClass();
+				$this->projet->task->warning_delay = (getDolGlobalInt('MAIN_DELAY_TASKS_TODO', 7) * 86400);
 			}
 
-			if (isset($this->order)) {
-				$this->order->client = new stdClass();
-				$this->order->fournisseur = new stdClass();
-				$this->order->client->warning_delay = (isset($this->global->MAIN_DELAY_ORDERS_TO_PROCESS) ? (int) $this->global->MAIN_DELAY_ORDERS_TO_PROCESS : 2) * 86400;
-				$this->order->fournisseur->warning_delay = (isset($this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS) ? (int) $this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS : 7) * 86400;
+			if (isset($this->commande)) {
+				$this->commande->client = new stdClass();
+				$this->commande->fournisseur = new stdClass();
+				$this->commande->client->warning_delay = (isset($this->global->MAIN_DELAY_ORDERS_TO_PROCESS) ? (int) $this->global->MAIN_DELAY_ORDERS_TO_PROCESS : 2) * 86400;
+				$this->commande->fournisseur->warning_delay = (isset($this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS) ? (int) $this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS : 7) * 86400;
 			}
 			if (isset($this->propal)) {
 				$this->propal->cloture = new stdClass();
@@ -1126,20 +1149,20 @@ class Conf extends stdClass
 				$this->propal->cloture->warning_delay = (isset($this->global->MAIN_DELAY_PROPALS_TO_CLOSE) ? (int) $this->global->MAIN_DELAY_PROPALS_TO_CLOSE : 0) * 86400;
 				$this->propal->facturation->warning_delay = (isset($this->global->MAIN_DELAY_PROPALS_TO_BILL) ? (int) $this->global->MAIN_DELAY_PROPALS_TO_BILL : 0) * 86400;
 			}
-			if (isset($this->invoice)) {
-				$this->invoice->client = new stdClass();
-				$this->invoice->fournisseur = new stdClass();
-				$this->invoice->client->warning_delay = (isset($this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED) ? (int) $this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED : 0) * 86400;
-				$this->invoice->fournisseur->warning_delay = (isset($this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY) ? (int) $this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY : 0) * 86400;
+			if (isset($this->facture)) {
+				$this->facture->client = new stdClass();
+				$this->facture->fournisseur = new stdClass();
+				$this->facture->client->warning_delay = (isset($this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED) ? (int) $this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED : 0) * 86400;
+				$this->facture->fournisseur->warning_delay = (isset($this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY) ? (int) $this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY : 0) * 86400;
 			}
-			if (isset($this->contract)) {
-				$this->contract->services = new stdClass();
-				$this->contract->services->inactifs = new stdClass();
-				$this->contract->services->expires = new stdClass();
-				$this->contract->services->inactifs->warning_delay = (isset($this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES) ? (int) $this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES : 0) * 86400;
-				$this->contract->services->expires->warning_delay = (isset($this->global->MAIN_DELAY_RUNNING_SERVICES) ? (int) $this->global->MAIN_DELAY_RUNNING_SERVICES : 0) * 86400;
+			if (isset($this->contrat)) {
+				$this->contrat->services = new stdClass();
+				$this->contrat->services->inactifs = new stdClass();
+				$this->contrat->services->expires = new stdClass();
+				$this->contrat->services->inactifs->warning_delay = (isset($this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES) ? (int) $this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES : 0) * 86400;
+				$this->contrat->services->expires->warning_delay = (isset($this->global->MAIN_DELAY_RUNNING_SERVICES) ? (int) $this->global->MAIN_DELAY_RUNNING_SERVICES : 0) * 86400;
 			}
-			if (isset($this->order)) {
+			if (isset($this->commande)) {
 				$this->bank->rappro	= new stdClass();
 				$this->bank->cheque	= new stdClass();
 				$this->bank->rappro->warning_delay = (isset($this->global->MAIN_DELAY_TRANSACTIONS_TO_CONCILIATE) ? (int) $this->global->MAIN_DELAY_TRANSACTIONS_TO_CONCILIATE : 0) * 86400;
@@ -1156,8 +1179,12 @@ class Conf extends stdClass
 				$this->holiday->approve->warning_delay = (isset($this->global->MAIN_DELAY_HOLIDAYS) ? (int) $this->global->MAIN_DELAY_HOLIDAYS : 0) * 86400;
 			}
 
-			if (!empty($this->global->PRODUIT_MULTIPRICES) && empty($this->global->PRODUIT_MULTIPRICES_LIMIT)) {
+			if ((!empty($this->global->PRODUIT_MULTIPRICES) || getDolGlobalString('PRODUIT_CUSTOMER_PRICES_AND_MULTIPRICES')) && empty($this->global->PRODUIT_MULTIPRICES_LIMIT)) {
 				$this->global->PRODUIT_MULTIPRICES_LIMIT = 5;
+			}
+
+			if (!isset($this->global->MAIN_CHECKBOX_LEFT_COLUMN)) {
+				$this->global->MAIN_CHECKBOX_LEFT_COLUMN = 1;
 			}
 
 			// For modules that want to disable top or left menu
@@ -1179,6 +1206,10 @@ class Conf extends stdClass
 
 			if (!isset($this->global->MAIN_JS_GRAPH)) {
 				$this->global->MAIN_JS_GRAPH = 'chart'; // Use chart.js library
+			}
+
+			if (!isset($this->global->THEME_ELDY_USEBORDERONTABLE)) {
+				$this->global->THEME_ELDY_USEBORDERONTABLE = 1;
 			}
 
 			if (empty($this->global->MAIN_MODULE_DOLISTORE_API_SRV)) {
@@ -1242,6 +1273,38 @@ class Conf extends stdClass
 			}
 
 
+			// Simple deprecation management. We do not use DolDeprecationHandlet for $conf.
+
+			// product is new use
+			if (isset($this->product)) {
+				// For backward compatibility
+				$this->produit = $this->product;
+			}
+			// invoice is new use, facture is old use still initialised
+			if (isset($this->facture)) {
+				$this->invoice = $this->facture;
+			}
+			// order is new use, commande is old use still initialised
+			if (isset($this->commande)) {
+				$this->order = $this->commande;
+			}
+			// contract is new use, contrat is old use still initialised
+			if (isset($this->contrat)) {
+				$this->contract = $this->contrat;
+			}
+			// category is new use, categorie is old use still initialised
+			if (isset($this->categorie)) {
+				$this->category = $this->categorie;
+			}
+			// project is new use, projet is old use still initialised
+			if (isset($this->projet) && !isset($this->project)) {
+				$this->project = $this->projet;
+			}
+			// member is new use, adherent is old use still initialised
+			if (isset($this->adherent) && !isset($this->member)) {
+				$this->member = $this->adherent;
+			}
+
 			// Object $mc
 			if (!defined('NOREQUIREMC') && isModEnabled('multicompany')) {
 				if (is_object($mc)) {
@@ -1282,8 +1345,8 @@ class Conf extends stdClass
 
 					require_once $handler_file_found;
 					$loghandlerinstance = new $handler();
-					if (!$loghandlerinstance instanceof LogHandlerInterface) {
-						throw new Exception('Log handler does not extend LogHandlerInterface');
+					if (!$loghandlerinstance instanceof LogHandler) {
+						throw new Exception('Log handler does not extend LogHandler');
 					}
 
 					if (empty($this->loghandlers[$handler])) {

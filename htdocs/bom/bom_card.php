@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2017-2023  Laurent Destailleur     <eldy@users.sourceforge.net>
- * Copyright (C) 2019       Frédéric France         <frederic.france@netlogic.fr>
+ * Copyright (C) 2019-2024  Frédéric France         <frederic.france@free.fr>
  * Copyright (C) 2023       Charlene Benke          <charlene@patas-monkey.com>
  * Copyright (C) 2024		MDW							<mdeweerd@users.noreply.github.com>
  *
@@ -33,6 +33,15 @@ require_once DOL_DOCUMENT_ROOT.'/bom/lib/bom.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/mrp/lib/mrp.lib.php';
 
 
+/**
+ * @var Conf $conf
+ * @var DoliDB $db
+ * @var HookManager $hookmanager
+ * @var Societe $mysoc
+ * @var Translate $langs
+ * @var User $user
+ */
+
 // Load translation files required by the page
 $langs->loadLangs(array('mrp', 'other'));
 
@@ -52,7 +61,7 @@ $hidedetails = (GETPOSTINT('hidedetails') ? GETPOSTINT('hidedetails') : (getDolG
 $hidedesc = (GETPOSTINT('hidedesc') ? GETPOSTINT('hidedesc') : (getDolGlobalString('MAIN_GENERATE_DOCUMENTS_HIDE_DESC') ? 1 : 0));
 $hideref = (GETPOSTINT('hideref') ? GETPOSTINT('hideref') : (getDolGlobalString('MAIN_GENERATE_DOCUMENTS_HIDE_REF') ? 1 : 0));
 
-// Initialize technical objects
+// Initialize a technical objects
 $object = new BOM($db);
 $extrafields = new ExtraFields($db);
 $diroutputmassaction = $conf->bom->dir_output.'/temp/massgeneration/'.$user->id;
@@ -76,7 +85,7 @@ if (empty($action) && empty($id) && empty($ref)) {
 }
 
 // Load object
-include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be include, not include_once.
+include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php'; // Must be 'include', not 'include_once'.
 if ($object->id > 0) {
 	$object->calculateCosts();
 }
@@ -170,6 +179,7 @@ if (empty($reshook)) {
 		$qty = price2num(GETPOST('qty', 'alpha'), 'MS');
 		$qty_frozen = price2num(GETPOST('qty_frozen', 'alpha'), 'MS');
 		$disable_stock_change = GETPOSTINT('disable_stock_change');
+		$fk_workstation = GETPOSTINT('idworkstations');
 		$efficiency = price2num(GETPOST('efficiency', 'alpha'));
 		$fk_unit = GETPOST('fk_unit', 'alphanohtml');
 
@@ -178,7 +188,11 @@ if (empty($reshook)) {
 			$product = new Product($db);
 			$res = $product->fetch($idprod);
 			if ($res > 0 && $product->type == Product::TYPE_SERVICE) {
-				$fk_default_workstation = $product->fk_default_workstation;
+				if ($fk_workstation > 0) {
+					$fk_default_workstation = $fk_workstation;
+				} else {
+					$fk_default_workstation = $product->fk_default_workstation;
+				}
 			}
 			if (empty($fk_unit)) {
 				$fk_unit = $product->fk_unit;
@@ -202,7 +216,7 @@ if (empty($reshook)) {
 		// We check if we're allowed to add this bom
 		$TParentBom = array();
 		$object->getParentBomTreeRecursive($TParentBom);
-		if ($bom_child_id > 0 && !empty($TParentBom) && in_array($bom_child_id, $TParentBom)) {
+		if ($bom_child_id > 0 && in_array($bom_child_id, $TParentBom)) {
 			$n_child = new BOM($db);
 			$n_child->fetch($bom_child_id);
 			setEventMessages($langs->transnoentities('BomCantAddChildBom', $n_child->getNomUrl(1), $object->getNomUrl(1)), null, 'errors');
@@ -305,10 +319,13 @@ if (empty($reshook)) {
 $form = new Form($db);
 $formfile = new FormFile($db);
 
-
-$title = $langs->trans('BOM');
+if ($object->id > 0) {
+	$title = $object->ref;
+} else {
+	$title = $langs->trans('BOM');
+}
 $help_url = 'EN:Module_BOM';
-llxHeader('', $title, $help_url);
+llxHeader('', $title, $help_url, '', 0, 0, '', '', '', 'mod-bom page-card');
 
 // Part to create
 if ($action == 'create') {
@@ -364,7 +381,7 @@ if (($id || $ref) && $action == 'edit') {
 
 	print dol_get_fiche_end();
 
-	print $form->buttonsSaveCancel("Create");
+	print $form->buttonsSaveCancel("Update");
 
 	print '</form>';
 }
@@ -586,6 +603,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	if (!empty($object->table_element_line)) {
 		// Products
+
 		$res = $object->fetchLinesbytypeproduct(0);		// Load all lines products into ->lines
 		$object->calculateCosts();
 
@@ -636,7 +654,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		print "</form>\n";
 
+
 		// Services
+
 		$filtertype = 1;
 		$res = $object->fetchLinesbytypeproduct(1);		// Load all lines services into ->lines
 		$object->calculateCosts();
@@ -795,7 +815,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print $formfile->showdocuments('bom', $objref, $filedir, $urlsource, $genallowed, $delallowed, $object->model_pdf, 1, 0, 0, 28, 0, '', '', '', $langs->defaultlang);
 
 		// Show links to link elements
-		$linktoelem = $form->showLinkToObjectBlock($object, null, array('bom'));
+		$tmparray = $form->showLinkToObjectBlock($object, array(), array('bom'), 1);
+		$linktoelem = $tmparray['linktoelem'];
+		$htmltoenteralink = $tmparray['htmltoenteralink'];
+		print $htmltoenteralink;
+
 		$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 
 
