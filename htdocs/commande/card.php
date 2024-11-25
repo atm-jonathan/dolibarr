@@ -718,8 +718,7 @@ if (empty($reshook)) {
 		}
 	} elseif ($action == 'addline' && $usercancreate && (
 			(GETPOST('submitforallmargins', 'alpha') && GETPOST('marginforalllines') !== '') ||
-			(GETPOST('submitforallmark', 'alpha') && GETPOST('markforalllines') !== '')))
-	{
+			(GETPOST('submitforallmark', 'alpha') && GETPOST('markforalllines') !== ''))) {
 		$outlangs = $langs;
 		// Define margin
 		$margin_rate = GETPOSTISSET('marginforalllines') ? GETPOST('marginforalllines', 'int') : '';
