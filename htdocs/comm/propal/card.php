@@ -1016,47 +1016,35 @@ if (empty($reshook)) {
 			$prod = new Product($db);
 			$res = $prod->fetch($line->fk_product);
 			if ($res > 0 && $prod->price_min > $line->subprice) {
-				$price_subprice  = price($line->subprice, 0, $outlangs, 1, -1, -1, 'auto');
+				$price_subprice = price($line->subprice, 0, $outlangs, 1, -1, -1, 'auto');
 				$price_price_min = price($prod->price_min, 0, $outlangs, 1, -1, -1, 'auto');
-				setEventMessages($prod->ref.' - '.$prod->label.' ('.$price_subprice.' < '.$price_price_min.' '.strtolower($langs->trans("MinPrice")).')'."\n", null, 'warnings');
+				setEventMessages($prod->ref . ' - ' . $prod->label . ' (' . $price_subprice . ' < ' . $price_price_min . ' ' . strtolower($langs->trans("MinPrice")) . ')' . "\n", null, 'warnings');
 			} else {
 				setEventMessages($prod->error, $prod->errors, 'errors');
 			}
-		}
-		// Manage $line->subprice and $line->multicurrency_subprice
-		$multicurrency_subprice = (float) $line->subprice * $line->multicurrency_subprice / $subprice_multicurrency;
-		// Update DB
-		$result = $object->updateline($line->id, $line->subprice, $line->qty, $line->remise_percent, $line->tva_tx, $line->localtax1_tx, $line->localtax2_tx, $line->desc, 'HT', $line->info_bits, $line->special_code, $line->fk_parent_line, 0, $line->fk_fournprice, $line->pa_ht, $line->product_ref, $line->product_type, $line->date_start, $line->date_end, $line->array_options, $line->fk_unit, $multicurrency_subprice);
-		// Update $object with new margin info
-		if ($result > 0) {
-			$line->marge_tx = $margin_rate;
-			if (is_numeric($margin_rate) && empty($mark_rate)) {
-				$line->marque_tx = $margin_rate * $line->pa_ht / (float) $subprice;
-				$line->marge_tx = $margin_rate;
-				$line->total_ht = $line->qty * (float) $subprice;
-			} elseif (is_numeric($mark_rate) && empty($margin_rate)) {
-				$line->total_tva = $line->tva_tx * $line->qty * (float) $subprice;
-				$line->marque_tx = $mark_rate;
-				$line->total_ttc = (1 + $line->tva_tx) * $line->qty * (float) $subprice;
+			// Manage $line->subprice and $line->multicurrency_subprice
+			$multicurrency_subprice = (float) $line->subprice * $line->multicurrency_subprice / $subprice_multicurrency;
+			// Update DB
+			$result = $object->updateline($line->id, $line->subprice, $line->qty, $line->remise_percent, $line->tva_tx, $line->localtax1_tx, $line->localtax2_tx, $line->desc, 'HT', $line->info_bits, $line->special_code, $line->fk_parent_line, 0, $line->fk_fournprice, $line->pa_ht, $line->product_ref, $line->product_type, $line->date_start, $line->date_end, $line->array_options, $line->fk_unit, $multicurrency_subprice);
+			// Update $object with new margin info
+			if ($result > 0) {
+				if (is_numeric($margin_rate) && empty($mark_rate)) {
+					$line->marge_tx = $margin_rate;
+				} elseif (is_numeric($mark_rate) && empty($margin_rate)) {
+					$line->marque_tx = $mark_rate;
+				}
+				$line->total_ht = $line->qty * (float) $line->subprice;
+				$line->total_tva = $line->tva_tx * $line->qty * (float) $line->subprice;
+				$line->total_ttc = (1 + $line->tva_tx) * $line->qty * (float) $line->subprice;
+				// Manage $line->subprice and $line->multicurrency_subprice
+				$line->multicurrency_total_ht = $line->qty * (float) $subprice_multicurrency * $line->multicurrency_subprice / $line->subprice;
+				$line->multicurrency_total_tva = $line->tva_tx * $line->qty * (float) $subprice_multicurrency * $line->multicurrency_subprice / $line->subprice;
+				$line->multicurrency_total_ttc = (1 + $line->tva_tx) * $line->qty * (float) $subprice_multicurrency * $line->multicurrency_subprice / $line->subprice;
+				// Used previous $line->subprice and $line->multicurrency_subprice above, now they can be set to their new values
+				$line->multicurrency_subprice = $multicurrency_subprice;
+			} else {
+				setEventMessages($object->error, $object->errors, 'errors');
 			}
-			// Manage $line->subprice and $line->multicurrency_subprice
-			$line->total_ht = $line->qty * (float) $line->subprice;
-			$line->multicurrency_total_ht = $line->qty * (float) $subprice * $line->multicurrency_subprice / $line->subprice;
-			$line->total_tva = $line->tva_tx * $line->qty * (float) $line->subprice;
-			$line->multicurrency_total_tva = $line->tva_tx * $line->qty * (float) $subprice * $line->multicurrency_subprice / $line->subprice;
-			$line->total_ttc = (1 + $line->tva_tx) * $line->qty * (float) $line->subprice;
-			$line->multicurrency_total_ttc = (1 + $line->tva_tx) * $line->qty * (float) $subprice * $line->multicurrency_subprice / $line->subprice;
-			// Manage $line->subprice and $line->multicurrency_subprice
-			// Used previous $line->subprice and $line->multicurrency_subprice above, now they can be set to their new values
-			$line->multicurrency_total_ht = $line->qty * (float) $subprice_multicurrency * $line->multicurrency_subprice / $line->subprice;
-			$line->subprice = $subprice;
-			$line->multicurrency_total_tva = $line->tva_tx * $line->qty * (float) $subprice_multicurrency * $line->multicurrency_subprice / $line->subprice;
-			$line->multicurrency_subprice = $multicurrency_subprice;
-			$line->multicurrency_total_ttc = (1 + $line->tva_tx) * $line->qty * (float) $subprice_multicurrency* $line->multicurrency_subprice / $line->subprice;
-			// Used previous $line->subprice and $line->multicurrency_subprice above, now they can be set to their new values
-			$line->multicurrency_subprice = $multicurrency_subprice;
-		} else {
-			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	} elseif ($action == 'addline' && !GETPOST('submitforalllines', 'alpha') && !GETPOST('submitforallmargins', 'alpha') && $usercancreate) {		// Add line
 		// Set if we used free entry or predefined product
