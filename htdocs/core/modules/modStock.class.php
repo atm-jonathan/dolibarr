@@ -529,6 +529,65 @@ class modStock extends DolibarrModules
 		$this->import_run_sql_after_array[$r] = array(    // Because we may change data that are denormalized, we must update dernormalized data after.
 			'UPDATE '.MAIN_DB_PREFIX.'product as p SET stock = (SELECT SUM(ps.reel) FROM '.MAIN_DB_PREFIX.'product_stock ps WHERE ps.fk_product = p.rowid);'
 		);
+
+		// Import stocks avec numéro de lot/série
+		$r++;
+		$this->import_code[$r] = $this->rights_class.'_'.$r;
+		$this->import_label[$r] = "Stocks avec lots"; // Translation key
+		$this->import_icon[$r] = "stock";
+		$this->import_entities_array[$r] = array();
+		$this->import_tables_array[$r] = array(
+			'ps' => MAIN_DB_PREFIX.'product_stock',
+			'pb' => MAIN_DB_PREFIX.'product_batch'
+		);
+
+		$this->import_fields_array[$r] = array(
+			'ps.fk_product' => "Product*",
+			'ps.fk_entrepot' => "Warehouse*",
+			'pb.batch' => "Batch*",
+			'pb.qty' => "Stock*"
+		);
+
+		$this->import_convertvalue_array[$r] = array(
+			'ps.fk_product' => array('rule' => 'fetchidfromref', 'classfile' => '/product/class/product.class.php', 'class' => 'Product', 'method' => 'fetch', 'element' => 'product'),
+			'ps.fk_entrepot' => array('rule' => 'fetchidfromref', 'classfile' => '/product/stock/class/entrepot.class.php', 'class' => 'Entrepot', 'method' => 'fetch', 'element' => 'ref'),
+			'pb.batch' => array('rule' => 'fetchidfromref', 'classfile' => '/product/class/productbatch.class.php', 'class' => 'Productbatch', 'method' => 'fetch', 'element' => 'batch')
+		);
+
+		$this->import_examplevalues_array[$r] = array(
+			'ps.fk_product' => "id or ref of product",
+			'ps.fk_entrepot' => "id or ref of warehouse",
+			'pb.batch' => "batch number",
+			'pb.qty' => "10"
+		);
+
+		$this->import_updatekeys_array[$r] = array(
+			'ps.fk_product' => 'Product',
+			'ps.fk_entrepot' => "Warehouse",
+			'pb.batch' => "Batch"
+		);
+
+// Mise à jour des stocks et des lots
+		$this->import_run_sql_after_array[$r] = array(
+			// Mise à jour du stock global
+			'INSERT INTO '.MAIN_DB_PREFIX.'product_stock (fk_product, fk_entrepot, reel)
+    VALUES (:fk_product, :fk_entrepot, :qty)
+    ON DUPLICATE KEY UPDATE reel = reel + VALUES(reel);',
+
+			// Mise à jour des lots
+			'INSERT INTO '.MAIN_DB_PREFIX.'product_batch (fk_product_stock, batch, qty)
+    VALUES (
+        (SELECT rowid FROM '.MAIN_DB_PREFIX.'product_stock WHERE fk_product = :fk_product AND fk_entrepot = :fk_entrepot),
+        :batch,
+        :qty
+    )
+    ON DUPLICATE KEY UPDATE qty = qty + VALUES(qty);',
+
+			// Mise à jour du stock total du produit
+			'UPDATE '.MAIN_DB_PREFIX.'product as p
+    SET stock = (SELECT SUM(ps.reel) FROM '.MAIN_DB_PREFIX.'product_stock ps WHERE ps.fk_product = p.rowid);'
+		);
+
 	}
 
 
