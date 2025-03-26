@@ -1034,7 +1034,6 @@ class ImportCsv extends ModeleImports
 								}
 							}
 						}
-
 						// Update not done, we do insert
 						if (!$error && !$updatedone) {
 							// We db escape social network field because he isn't in field creation
@@ -1051,6 +1050,7 @@ class ImportCsv extends ModeleImports
 								$sqlstart .= ", entity";
 								$sqlend .= ", ".$conf->entity;
 							}
+
 							if (!empty($objimport->array_import_tables_creator[0][$alias])) {
 								$sqlstart .= ", ".$objimport->array_import_tables_creator[0][$alias];
 								$sqlend .= ", ".$user->id;
