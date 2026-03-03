@@ -1850,7 +1850,6 @@ if ($step == 4 && $datatoimport) {
 						'lib' => implode("<br>", array_merge([$hookmanager->error], $hookmanager->errors))
 					];
 				}
-
 				if (empty($reshook)) {
 					// Run import
 					$result = $obj->import_insert($arrayrecord, $array_match_file_to_database, $objimport, count($fieldssource), $importid, $updatekeys);
@@ -1887,7 +1886,9 @@ if ($step == 4 && $datatoimport) {
 			$i = 0;
 			foreach ($objimport->array_import_run_sql_after[0] as $sqlafterimport) {
 				$i++;
+				print $sqlafterimport . '<br>';
 				$resqlafterimport = $db->query($sqlafterimport);
+				var_dump($resqlafterimport);
 				if (!$resqlafterimport) {
 					$arrayoferrors['none'][] = array('lib' => $langs->trans("Error running final request: ".$sqlafterimport));
 					$error++;
@@ -1915,7 +1916,6 @@ if ($step == 4 && $datatoimport) {
 		}
 
 		// Show Errors
-		//var_dump($arrayoferrors);
 		if (count($arrayoferrors)) {
 			print img_error().' <b>'.$langs->trans("ErrorsOnXLines", count($arrayoferrors)).'</b><br>';
 			print '<table width="100%" class="border"><tr><td>';

@@ -3036,7 +3036,6 @@ class Product extends CommonObject
 			// 	$sql .= ", p.stock";
 			// }
 		}
-
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			unset($this->oldcopy);
