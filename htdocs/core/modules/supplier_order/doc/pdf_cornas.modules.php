@@ -567,6 +567,7 @@ class pdf_cornas extends ModelePDFSuppliersOrders
 					}
 
 					$nexY = $pdf->GetY();
+					$nexYAfterDesc = $nexY;
 					$pageposafter = $pdf->getPage();
 					$pdf->setPage($pageposbefore);
 					$pdf->setTopMargin($this->marge_haute);
@@ -633,6 +634,12 @@ class pdf_cornas extends ModelePDFSuppliersOrders
 								$nexY = max($pdf->GetY(), $nexY);
 							}
 						}
+					}
+
+					// Restore nexY from the correct page when prices were printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
 					}
 
 					$parameters = array(

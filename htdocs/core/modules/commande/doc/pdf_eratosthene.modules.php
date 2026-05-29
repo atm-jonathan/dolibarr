@@ -617,7 +617,7 @@ class pdf_eratosthene extends ModelePDFCommandes
 
 
 					$nexY = max($pdf->GetY(), $posYAfterImage);
-
+					$nexYAfterDesc = $nexY;
 
 					$pageposafter = $pdf->getPage();
 
@@ -693,6 +693,12 @@ class pdf_eratosthene extends ModelePDFCommandes
 								$nexY = max($pdf->GetY(), $nexY);
 							}
 						}
+					}
+
+					// Restore nexY from the correct page when prices were printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
 					}
 
 					$parameters = array(

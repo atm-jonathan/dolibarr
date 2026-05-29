@@ -575,6 +575,7 @@ class pdf_standard_asset extends ModelePDFAsset
 					}
 
 					$nexY = $pdf->GetY();
+					$nexYAfterDesc = $nexY;
 					$pageposafter = $pdf->getPage();
 					$pdf->setPage($pageposbefore);
 					$pdf->setTopMargin($this->marge_haute);
@@ -607,6 +608,12 @@ class pdf_standard_asset extends ModelePDFAsset
 						}
 					}
 
+
+					// Restore nexY from the correct page when prices were printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
+					}
 
 					$parameters = array(
 						'object' => $object,

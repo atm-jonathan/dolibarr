@@ -775,6 +775,7 @@ class pdf_sponge extends ModelePDFFactures
 					}
 
 					$nexY = max($pdf->GetY(), $posYAfterImage, $posYAfterDescription);
+					$nexYAfterDesc = $nexY;
 
 					$pageposafter = $pdf->getPage();
 					$pdf->setPage($pageposbefore);
@@ -857,6 +858,12 @@ class pdf_sponge extends ModelePDFFactures
 						}
 					}
 
+
+					// Restore nexY from the correct page when prices were printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
+					}
 
 					$parameters = array(
 						'object' => $object,
