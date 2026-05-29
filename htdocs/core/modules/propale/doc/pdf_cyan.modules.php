@@ -632,6 +632,7 @@ class pdf_cyan extends ModelePDFPropales
 					}
 
 					$nexY = $pdf->GetY();
+					$nexYAfterDesc = $nexY;
 					$pageposafter = $pdf->getPage();
 
 					$pdf->setPage($pageposbefore);
@@ -706,6 +707,12 @@ class pdf_cyan extends ModelePDFPropales
 								$nexY = max($pdf->GetY(), $nexY);
 							}
 						}
+					}
+
+					// Restore nexY from the correct page when prices were printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
 					}
 
 					$parameters = array(

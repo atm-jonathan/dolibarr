@@ -449,6 +449,7 @@ class pdf_storm extends ModelePDFDeliveryOrder
 					}
 
 					$nexY = $pdf->GetY();
+					$nexYAfterDesc = $nexY;
 					$pageposafter = $pdf->getPage();
 					$pdf->setPage($pageposbefore);
 					$pdf->setTopMargin($this->marge_haute);
@@ -496,6 +497,12 @@ class pdf_storm extends ModelePDFDeliveryOrder
 						//$pdf->SetDrawColor(190,190,200);
 						$pdf->line($this->marge_gauche, $nexY + 1, $this->page_largeur - $this->marge_droite, $nexY + 1);
 						$pdf->SetLineStyle(array('dash'=>0));
+					}
+
+					// Restore nexY from the correct page when content was printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
 					}
 
 					$nexY += 2; // Add space between lines

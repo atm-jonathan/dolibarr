@@ -566,6 +566,7 @@ class pdf_zenith extends ModelePDFSupplierProposal
 					}
 
 					$nexY = $pdf->GetY();
+					$nexYAfterDesc = $nexY;
 					$pageposafter = $pdf->getPage();
 					$pdf->setPage($pageposbefore);
 					$pdf->setTopMargin($this->marge_haute);
@@ -632,6 +633,12 @@ class pdf_zenith extends ModelePDFSupplierProposal
 								$nexY = max($pdf->GetY(), $nexY);
 							}
 						}
+					}
+
+					// Restore nexY from the correct page when prices were printed on a previous page
+					if ($pageposafter > $pageposbefore && !empty($showpricebeforepagebreak)) {
+						$nexY = $nexYAfterDesc;
+						$pdf->setPage($pageposafter);
 					}
 
 					$parameters = array(
