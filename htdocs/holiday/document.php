@@ -139,6 +139,13 @@ if ($object->id) {
 
 	// Build file list
 	$filearray = dol_dir_list($upload_dir, "files", 0, '', '(\.meta|_preview.*\.png)$', $sortfield, (strtolower($sortorder) == 'desc' ? SORT_DESC : SORT_ASC), 1);
+	// Filter: keep only files belonging to this holiday (shared folder due to get_exdir level=2)
+	$refprefix = dol_sanitizeFileName($object->ref);
+	$provprefix = dol_sanitizeFileName('(PROV'.$object->id.')');
+	$filearray = array_values(array_filter($filearray, function ($f) use ($refprefix, $provprefix) {
+		return strncmp($f['name'], $refprefix.'-', strlen($refprefix) + 1) === 0
+			|| strncmp($f['name'], $provprefix.'-', strlen($provprefix) + 1) === 0;
+	}));
 	$totalsize = 0;
 	foreach ($filearray as $key => $file) {
 		$totalsize += $file['size'];
